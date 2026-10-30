@@ -1,0 +1,20 @@
+FCN-ZENTRALE – UPDATE: ROBIN TIPPT
+
+1. Supabase > SQL Editor: Inhalt aus supabase-robin-tip.sql ausführen.
+2. Vercel > Settings > Environment Variables:
+   SUPABASE_URL und SUPABASE_SECRET_KEY (falls nicht vorhanden)
+   ROBIN_TIP_PASSWORD = selbst gewähltes, langes Passwort für Robin
+   CRON_SECRET = langes zufälliges Geheimnis (falls nicht vorhanden)
+   RESEND_API_KEY = API-Key von Resend (https://resend.com)
+   REMINDER_FROM_EMAIL = verifizierte Absenderadresse/-domain bei Resend
+3. GitHub: index.html, robin-fcn.jpg, api/*.js und vercel.json hochladen.
+   supabase-robin-tip.sql muss nicht auf GitHub, sondern in Supabase ausgeführt werden.
+4. Vercel nach Änderungen deployen.
+
+Die Erinnerungsmail wird am Vortag eines in Supabase bekannten Spiels
+an Robin.Baetz@deutschebahn.com geschickt, wenn noch kein Tipp vorliegt.
+Sie wird nur versendet, wenn Resend korrekt konfiguriert ist und der Cron läuft.
+Für die Zustellung an eine Firmenadresse können Mailfilter gelten.
+Cron-Zeit 08:00 UTC (09:00 bzw. 10:00 Uhr deutscher Zeit).
+Tipp kann bis zum Anpfiff geändert werden. Die Seite zeigt gespeicherte Tipps öffentlich.
+Spielplanquelle: OpenLigaDB derzeit nur 2. Bundesliga.
