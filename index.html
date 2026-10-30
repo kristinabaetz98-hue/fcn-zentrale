@@ -147,7 +147,13 @@ body{background:#080b0e}
 .tabs{margin:16px 0;background:#090b0e}
 @media(max-width:700px){.robin-feature{height:auto;min-height:0;aspect-ratio:1536/363;background-size:100% 100%}.match-teams{grid-template-columns:1fr auto 1fr}.match-teams .match-info{grid-column:1/-1}}
 </style>
-</head>
+<style>
+/* Stadionangaben passend zum FCN-Dashboard */
+.fixture .fixture-venue{grid-column:2;grid-row:2;color:#c4c8cf;font-size:12px;padding-left:12px;margin-top:-8px}
+.fixture{grid-template-rows:auto auto;row-gap:5px}
+.fixture .fixture-meta{grid-column:3;grid-row:1;align-self:center}
+@media(max-width:700px){.fixture .fixture-venue{grid-column:1;grid-row:auto;margin:0;padding-left:0}.fixture .fixture-meta{grid-column:1;grid-row:auto}}
+</style></head>
 <body><main class="wrap"><section class="robin-feature" aria-label="Robin empfiehlt"><div class="hero-club-logo" id="heroClubLogo"><span>1.<br>FCN</span></div><div class="robin-copy"><div class="mini"><span class="red-line"></span><span class="red-dot"></span> NUR DER FCN! <span class="red-line"></span></div><h1>Robin empfiehlt</h1><p>Leidenschaft. Tradition. Für immer Club.</p></div><div class="robin-photo"></div></section>
 <section class="match-panel" aria-label="Nächstes Spiel"><div class="section-heading">▣ NÄCHSTES SPIEL</div><div class="match-main"><div class="match-teams"><div class="team-side"><div class="crest-holder" id="homeCrest"></div><div class="team" id="homeTeam">–</div></div><div class="vs">VS.</div><div class="team-side"><div class="crest-holder" id="awayCrest"></div><div class="team" id="awayTeam">–</div></div><p id="matchInfo" class="sub match-info">Spieltermin wird geladen</p></div><div class="match-clock"><div class="eyebrow">◷ NOCH BIS ZUM ANPFIFF</div><div class="clock"><div><strong id="days">--</strong><small>TAGE</small></div><div><strong id="hours">--</strong><small>STUNDEN</small></div><div><strong id="minutes">--</strong><small>MINUTEN</small></div><div><strong id="seconds">--</strong><small>SEKUNDEN</small></div></div></div></div></section>
 <section class="prediction" aria-label="Robin tippt"><div class="section-heading">▥ ROBIN TIPPT</div><div class="prediction-inner"><div class="prediction-view"><span class="prediction-caption">Mein Tipp für dieses Spiel:</span><div id="tipDisplay" class="tip-display">Noch kein Tipp abgegeben</div><div id="tipFor" class="note"></div></div><div class="tip-editor"><button id="showTipEditor" class="refresh" type="button">✎ Tipp eingeben / ändern</button><form id="tipForm" hidden><div class="tip-inputs"><label>Heim <input id="tipHome" type="number" min="0" max="30" required></label><span>:</span><label>Gast <input id="tipAway" type="number" min="0" max="30" required></label></div><label class="password-label">Robin-Passwort <input id="tipPassword" type="password" autocomplete="off" required placeholder="Nur für Robin"></label><button type="submit" class="btn">Tipp speichern</button><p id="tipMessage" class="note" role="status"></p></form><p class="note" id="reminderNote">E-Mail-Erinnerung am Vortag des Spiels – nach Einrichtung des Maildienstes.</p></div></div></section>
@@ -207,6 +213,37 @@ async function loadClubLogos(){
 
 if(next){updateCrests();$('homeTeam').textContent=next.home;$('awayTeam').textContent=next.away;$('matchInfo').textContent=fmt.format(new Date(next.date))+' Uhr · '+next.venue;$('previewTitle').textContent=next.home+' gegen '+next.away;$('oddsTitle').textContent=next.home+' – '+next.away;}
 function countdown(){if(!next){$('matchInfo').textContent='Kein zukünftiges Spiel hinterlegt – Spielplan aktualisieren';return;}let secs=Math.max(0,Math.floor((new Date(next.date)-new Date())/1000));const parts=[Math.floor(secs/86400),Math.floor(secs%86400/3600),Math.floor(secs%3600/60),secs%60];['days','hours','minutes','seconds'].forEach((id,i)=>$(id).textContent=String(parts[i]).padStart(2,'0'));}countdown();setInterval(countdown,1000);
+// Fallback-Stadien der Gegner, falls OpenLigaDB keinen Spielort liefert.
+// Ein abweichender Austragungsort aus der Datenbank hat immer Vorrang.
+const opponentStadiums={
+ 'FC St. Pauli':'Millerntor-Stadion, Hamburg',
+ 'SV Darmstadt 98':'Merck-Stadion am Böllenfalltor, Darmstadt',
+ 'Eintracht Braunschweig':'Eintracht-Stadion, Braunschweig',
+ '1. FC Heidenheim 1846':'Voith-Arena, Heidenheim',
+ 'VfL Bochum':'Vonovia Ruhrstadion, Bochum',
+ '1. FC Magdeburg':'Avnet Arena, Magdeburg',
+ 'VfL Osnabrück':'Bremer Brücke, Osnabrück',
+ 'Hertha BSC':'Olympiastadion, Berlin',
+ 'Dynamo Dresden':'Rudolf-Harbig-Stadion, Dresden',
+ 'SpVgg Greuther Fürth':'Sportpark Ronhof | Thomas Sommer, Fürth',
+ 'DSC Arminia Bielefeld':'SchücoArena, Bielefeld',
+ 'Holstein Kiel':'Holstein-Stadion, Kiel',
+ 'Hannover 96':'Heinz von Heiden Arena, Hannover',
+ 'Karlsruher SC':'BBBank Wildpark, Karlsruhe',
+ 'VfL Wolfsburg':'Volkswagen Arena, Wolfsburg',
+ 'Energie Cottbus':'LEAG Energie Stadion, Cottbus',
+ '1. FC Kaiserslautern':'Fritz-Walter-Stadion, Kaiserslautern',
+ 'SV 07 Elversberg':'URSAPHARM-Arena an der Kaiserlinde, Spiesen-Elversberg',
+ 'Preußen Münster':'Preußenstadion, Münster',
+ 'SC Paderborn 07':'Home Deluxe Arena, Paderborn',
+ 'Fortuna Düsseldorf':'Merkur Spiel-Arena, Düsseldorf',
+ 'FC Schalke 04':'Veltins-Arena, Gelsenkirchen'
+};
+function venueLabel(g){
+ if(g.venue)return g.venue;
+ if(g.home==='1. FC Nürnberg')return 'Max-Morlock-Stadion, Nürnberg';
+ return opponentStadiums[g.home]||'Spielort noch nicht bestätigt';
+}
 function fixtures(items){return items.map(g=>{
  const el=document.createElement('div');el.className='fixture';
  const date=document.createElement('span');date.className='date';date.textContent=fmt.format(new Date(g.date))+' Uhr';
@@ -215,9 +252,10 @@ function fixtures(items){return items.map(g=>{
  const vs=document.createElement('span');vs.className='fixture-vs';vs.textContent='vs.';
  pair.append(makeTeam(g.home),vs,makeTeam(g.away));
  const meta=document.createElement('span');meta.className='fixture-meta';meta.textContent=g.status==='finished'?'Beendet · 2. Bundesliga':'2. Bundesliga';
- el.append(date,pair,meta);return el;
+ const venue=document.createElement('span');venue.className='fixture-venue';venue.textContent='📍 '+venueLabel(g);
+ el.append(date,pair,meta,venue);return el;
 });}
-function renderGames(){games.sort((a,b)=>new Date(a.date)-new Date(b.date));next=games.find(g=>new Date(g.date)>new Date());$('allFixtures').replaceChildren(...fixtures(games));$('overviewFixtures').replaceChildren(...fixtures(games.filter(g=>new Date(g.date)>new Date()).slice(0,3)));if(next){updateCrests();$('homeTeam').textContent=next.home;$('awayTeam').textContent=next.away;$('matchInfo').textContent=fmt.format(new Date(next.date))+' Uhr · '+(next.venue||'Spielort folgt');$('previewTitle').textContent=next.home+' gegen '+next.away;$('oddsTitle').textContent=next.home+' – '+next.away;}else{$('matchInfo').textContent='Nächster Termin noch nicht hinterlegt';$('homeTeam').textContent='FCN';$('awayTeam').textContent='–';}}renderGames();
+function renderGames(){games.sort((a,b)=>new Date(a.date)-new Date(b.date));next=games.find(g=>new Date(g.date)>new Date());$('allFixtures').replaceChildren(...fixtures(games));$('overviewFixtures').replaceChildren(...fixtures(games.filter(g=>new Date(g.date)>new Date()).slice(0,3)));if(next){updateCrests();$('homeTeam').textContent=next.home;$('awayTeam').textContent=next.away;$('matchInfo').textContent=fmt.format(new Date(next.date))+' Uhr · '+venueLabel(next);$('previewTitle').textContent=next.home+' gegen '+next.away;$('oddsTitle').textContent=next.home+' – '+next.away;}else{$('matchInfo').textContent='Nächster Termin noch nicht hinterlegt';$('homeTeam').textContent='FCN';$('awayTeam').textContent='–';}}renderGames();
 document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b===btn));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===btn.dataset.tab));}));
 // Die Daten werden sicher über die Vercel-Funktion /api/fcn geladen.
 
